@@ -1,0 +1,31 @@
+[Unit]
+Description=calibre content server
+# TODO evaluate block storage mount
+After=network.target mnt-volume_nyc3_01.mount
+StartLimitIntervalSec=100
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=calibre
+Group=calibre
+ExecStart=/usr/bin/calibre-server \
+	--ban-after 5 \
+	--ban-for 2 \
+  --log "/var/log/calibre-server.log"
+	--access-log "/var/log/calibre-access.log" \
+	--max-log-size 10 \
+	--enable-auth \
+  # TODO set up certs
+	# --ssl-certfile "/home/jmighion/.acme.sh/casademig.duckdns.org/casademig.duckdns.org.cer" \
+	# --ssl-keyfile "/home/jmighion/.acme.sh/casademig.duckdns.org/casademig.duckdns.org.key" \
+  # TODO set up userdb
+	--userdb "/home/jmighion/.config/calibre/server-users.sqlite" \
+  # TODO might not need to explicitly set the library
+	"/mnt/mybook/Calibre Library"
+Restart=on-failure
+RestartSec=5
+
+
+[Install]
+WantedBy=multi-user.target

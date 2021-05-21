@@ -1,0 +1,21 @@
+[Unit]
+Description=calibre content server
+After=network.target mnt-{{ mount_name }}.mount
+StartLimitIntervalSec=100
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=calibre
+Group=calibre
+ExecStart=/usr/bin/calibre-server \
+  --ban-after 5 \
+  --ban-for 2 \
+  --max-log-size 10 \
+  "{{ calibre_library }}"
+Restart=on-failure
+RestartSec=5
+
+
+[Install]
+WantedBy=multi-user.target

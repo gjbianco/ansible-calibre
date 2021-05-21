@@ -1,0 +1,86 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: no
+  vars_files: [vars.yml]
+  tasks:
+
+#     - name: system updated
+#       dnf: name=* state=latest
+
+    - name: packages installed
+      dnf:
+        name:
+          - calibre
+          - tmux
+          # - fail2ban
+        state: present
+        enablerepo: epel
+
+#     - name: open firewall ports
+#       firewalld:
+#         permanent: yes
+#         immediate: yes
+#         port: "{{ item }}"
+#         state: enabled
+#       loop:
+#         - "8080/tcp" # calibre
+
+    - name: calibre user exists
+      user:
+        name: calibre
+        state: present
+
+    # - name: "set authorized keys for new user"
+    #   authorized_key:
+    #     key: "{{keyfile_uri}}"
+    #     user: calibre
+
+    - name: calibre library directory exists
+      file:
+        state: directory
+        path: "{{ calibre_library }}"
+        owner: calibre
+        group: calibre
+
+- hosts: all
+  become: yes
+  become_user: calibre
+  vars_files: [vars.yml]
+  tasks:
+
+    - name: initial book uploaded
+      copy:
+        src: frankenstein.epub
+        dest: /tmp
+
+    - name: calibre library initialized
+      command:
+        cmd: calibredb add --with-library {{ calibre_library }} /tmp/frankenstein.epub
+        # creates: "{{ calibre_library }}/metadata.db"
+
+- hosts: all
+  become: yes
+  vars_files: [vars.yml]
+  tasks:
+
+    - name: service file installed
+      notify: calibre_service_restart
+      template:
+        src: calibre.service.template
+        dest: /etc/systemd/system/calibre.service
+
+    - name: calibre service started
+      service:
+        name: calibre
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+  handlers:
+    - name: calibre_service_restart
+      service:
+        name: calibre
+        state: restarted
+        daemon_reload: yes
+

@@ -1,0 +1,2 @@
+mount_name: volume_nyc3_01
+calibre_library: /mnt/{{ mount_name }}/calibre_library
